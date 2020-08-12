@@ -1,3 +1,4 @@
 parameters:
         backup:
                 backup-dir: backups
+                row-amount: 10

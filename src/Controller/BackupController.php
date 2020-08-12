@@ -6,13 +6,16 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
 use App\Service\BackupService;
+use App\Service\Helper\BackupQueueHelper;
 
 class BackupController extends AbstractController
 {
     private backupService $backupService;
+    private BackupQueueHelper $backupQueue;
 
-    public function __construct(BackupService $backupService) {
+    public function __construct(BackupService $backupService, BackupQueueHelper $backupQueue) {
         $this->backupService = $backupService;
+        $this->backupQueue = $backupQueue;
     }
 
      /**
@@ -31,6 +34,7 @@ class BackupController extends AbstractController
             );
         }
 
+        $this->backupQueue->queueBackup($backupFile, $this->backupService->getTableList());
 
         return new JsonResponse(
             [
