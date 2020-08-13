@@ -31,12 +31,21 @@ class BackupService
         $this->backupDir = "{$projectDir}/{$backupParams['backup-dir']}";
     }
 
+    public function getTableList(): array
+    {
+        return $this->tableList;
+    }
+
+    /**
+     * @param string $tableName
+     */
     private function addToTableList(string $tableName)
     {
         if (!in_array($tableName, $this->tableList)){
             $this->tableList[] = $tableName;
         }
     }
+
     /**
      * Creates a file with create statements for all tables
      * @return ?string returns a backup file to write to or NULL if error has occured
@@ -67,9 +76,47 @@ class BackupService
 
         return $fileName;
     }
-
-    public function getTableList(): array
+    
+    /**
+     * @param string $table
+     * @param int $id
+     * @param int $amount
+     *
+     * @return array [last row id, INSERT statements for the rows]
+     */
+    public function getRowsInsert(string $table, int $id, int $amount): array
     {
-        return $this->tableList;
+        $rowInsert = '';
+        $conn = $this->em->getConnection();
+        
+        /* TODO LIMIT might be bad here */
+        $sql = "SELECT * FROM `{$table}` WHERE id > {$id} ORDER BY id ASC LIMIT {$amount};";
+        $lastId = 0;
+        if (!$id){
+            /* we are starting work with new table. Checking if it has id column */
+            $sqlCheck = "SHOW COLUMNS FROM `{$table}` LIKE 'id';";
+            $stmt = $conn->prepare($sqlCheck);
+            $stmt->execute();
+            if (empty($stmt->fetchAll())){
+                /* we are selecting everything from not numbered tables */
+                $sql = "SELECT * FROM `{$table}`;";
+            }
+        }
+        $stmt = $conn->prepare($sql);
+        $stmt->execute();
+        $rows = $stmt->fetchAll();
+        foreach ($rows as $row){
+            $insertSQL = "INSERT INTO `" . $table . "` SET ";
+            foreach ($row as $field => $value) {
+                $insertSQL .= " `" . $field . "` = '" . $value . "', ";
+                if ('id' === $field){
+                    $lastId = $value;
+                }
+            }
+            $insertSQL = trim($insertSQL, ", ");
+            $rowInsert .= $insertSQL . ";\n";
+        }
+        echo "$table: $lastId\n";
+        return [$lastId, $rowInsert];
     }
 }

@@ -18,6 +18,11 @@ class BackupQueueHelper
         $this->bus = $bus;
     }
 
+    /**
+     * @param string $fileName
+     * @param array $tableList
+     * @param array $current
+     */
     public function queueBackup(string $fileName, array $tableList, array $current = [])
     {
         $this->bus->dispatch(new BackupMessage([
