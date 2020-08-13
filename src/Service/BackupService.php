@@ -41,7 +41,7 @@ class BackupService
      */
     private function addToTableList(string $tableName)
     {
-        if (!in_array($tableName, $this->tableList)){
+        if (!in_array($tableName, $this->tableList)) {
             $this->tableList[] = $tableName;
         }
     }
@@ -60,7 +60,7 @@ class BackupService
         $fileName = "{$this->backupDir}/backup-" . time() . ".sql";
         $this->fs->touch($fileName);
 
-        foreach($stmt->fetchAll() as $table){
+        foreach ($stmt->fetchAll() as $table) {
             $conn = $this->em->getConnection();
             $sql = "SHOW CREATE TABLE {$table['TABLE_NAME']};";
             $stmt = $conn->prepare($sql);
@@ -69,14 +69,14 @@ class BackupService
                 $create = $stmt->fetchAll()[0]['Create Table'];
                 $this->fs->appendToFile($fileName, $create . "\n");
                 $this->addToTableList($table['TABLE_NAME']);
-            } catch (TableNotFoundException $e){
+            } catch (TableNotFoundException $e) {
                 continue;
             }
         }
 
         return $fileName;
     }
-    
+
     /**
      * @param string $table
      * @param int $id
@@ -88,16 +88,16 @@ class BackupService
     {
         $rowInsert = '';
         $conn = $this->em->getConnection();
-        
+
         /* TODO LIMIT might be bad here */
         $sql = "SELECT * FROM `{$table}` WHERE id > {$id} ORDER BY id ASC LIMIT {$amount};";
         $lastId = 0;
-        if (!$id){
+        if (!$id) {
             /* we are starting work with new table. Checking if it has id column */
             $sqlCheck = "SHOW COLUMNS FROM `{$table}` LIKE 'id';";
             $stmt = $conn->prepare($sqlCheck);
             $stmt->execute();
-            if (empty($stmt->fetchAll())){
+            if (empty($stmt->fetchAll())) {
                 /* we are selecting everything from not numbered tables */
                 $sql = "SELECT * FROM `{$table}`;";
             }
@@ -105,11 +105,11 @@ class BackupService
         $stmt = $conn->prepare($sql);
         $stmt->execute();
         $rows = $stmt->fetchAll();
-        foreach ($rows as $row){
+        foreach ($rows as $row) {
             $insertSQL = "INSERT INTO `" . $table . "` SET ";
             foreach ($row as $field => $value) {
                 $insertSQL .= " `" . $field . "` = '" . $value . "', ";
-                if ('id' === $field){
+                if ('id' === $field) {
                     $lastId = $value;
                 }
             }

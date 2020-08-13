@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -13,19 +14,20 @@ class BackupController extends AbstractController
     private backupService $backupService;
     private BackupQueueHelper $backupQueue;
 
-    public function __construct(BackupService $backupService, BackupQueueHelper $backupQueue) {
+    public function __construct(BackupService $backupService, BackupQueueHelper $backupQueue)
+    {
         $this->backupService = $backupService;
         $this->backupQueue = $backupQueue;
     }
 
-     /**
-      * @Route("/backup/start", methods={"POST"})
-      *
-      * This will start backup process by dumping db sceleton and putting a backup job in queue
-      */
+    /**
+     * @Route("/backup/start", methods={"POST"})
+     *
+     * This will start backup process by dumping db sceleton and putting a backup job in queue
+     */
     public function start(): JsonResponse
     {
-        if (!$backupFile = $this->backupService->dumpSceleton()){
+        if (!$backupFile = $this->backupService->dumpSceleton()) {
             return new JsonResponse(
                 [
                     'status' => 'Not able to dump DB sceleton'

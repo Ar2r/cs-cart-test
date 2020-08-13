@@ -31,5 +31,4 @@ class BackupQueueHelper
             'current' => $current
         ]));
     }
-
 }
